@@ -52,6 +52,14 @@ SCENARIOS = {
         "2) Convertis 1000 USD en EUR. "
         "3) Si j'investis 5000€ à 7% pendant 10 ans, quel capital ?"
     ),
+    "9": (
+        "Scénario 9 – Portefeuille boursier",
+        "Calcule la valeur de mon portefeuille AAPL:10|MSFT:5"
+    ),
+    "10": (
+        "Scénario 10 – Actualités",
+        "Donne-moi les actualités Apple aujourd'hui"
+    ),
 }
 
 

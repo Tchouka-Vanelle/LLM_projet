@@ -7,7 +7,19 @@ from tools.calculs       import calculer_marge, calculer_mensualite_pret
 from tools.api_publique  import convertir_devise
 from tools.texte         import resumer_texte, formater_rapport, extraire_mots_cles
 from tools.recommandation import recommander_produits
+from tools.portefeuille import calculer_portefeuille
 
+from langchain_community.tools import TavilySearchResults
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+
+tavily_tool = TavilySearchResults(
+    api_key=os.getenv("TAVILY_API_KEY"),
+    max_results=3,
+    description="Utilise cet outil pour rechercher des actualités ou informations récentes sur internet"
+)
 
 tools = [
  # ── Outil 1 : Base de données ─────────────────────────────────────
@@ -64,14 +76,18 @@ tools = [
                      'Entrée : budget,categorie,type_compte ex 300,Informatique,Premium. '
                      'Catégories : Informatique, Mobilier, Audio, Toutes. '
                      'Types : Standard, Premium, VIP.'),
-             
+    
+    tavily_tool ,
+    Tool(
+    name='calculer_portefeuille',
+    func=calculer_portefeuille,
+    description='Calcule la valeur d’un portefeuille. Entrée : AAPL:10|MSFT:5')        
 ]
 
 
 from langchain_classic.agents import AgentExecutor, create_react_agent
 from langchain_openai import ChatOpenAI
 from langchain_classic import hub
-import os
  
 def creer_agent():
     """Crée et retourne un agent LangChain configuré."""
@@ -95,7 +111,7 @@ def creer_agent():
     agent_executor = AgentExecutor(
         agent=agent,
         tools=tools,
-        verbose=True,            # Affiche le raisonnement étape par étape
+        verbose=False,            # Affiche le raisonnement étape par étape
         max_iterations=10,       # Évite les boucles infinies
         handle_parsing_errors=True
     )
