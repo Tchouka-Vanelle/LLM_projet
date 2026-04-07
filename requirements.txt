@@ -1,3 +1,5 @@
+#pip install -r requirements.txt
+
 langchain-core==1.2.14
 langchain-openai==1.1.10
 langchain-community==0.4.1
@@ -7,3 +9,5 @@ requests
 psycopg2-binary
 yfinance
 tavily-python
+langchain-experimental
+streamlit

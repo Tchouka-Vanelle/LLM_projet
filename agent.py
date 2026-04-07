@@ -14,6 +14,24 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+from langchain_experimental.tools import PythonREPLTool
+
+python_repl = PythonREPLTool()
+python_repl.name = "python_repl"
+
+python_repl.description = (
+    "Utilise cet outil pour effectuer des calculs complexes en Python. "
+    "Exemples : tri de données, statistiques, calculs sur un portefeuille. "
+    "Entrée : code Python valide sous forme de chaîne."
+    "OBLIGATOIRE : toujours utiliser print() pour afficher les résultats, "
+    "sinon aucun résultat ne sera retourné."
+)
+
+# ⚠️ IMPORTANT
+# ATTENTION SECURITE :
+# Cet outil exécute du code Python arbitraire.
+# Cela peut être dangereux (exécution de commandes système, accès fichiers…).
+# Ne jamais utiliser en production sans sandbox (ex: Docker isolé).
 
 tavily_tool = TavilySearchResults(
     api_key=os.getenv("TAVILY_API_KEY"),
@@ -22,7 +40,7 @@ tavily_tool = TavilySearchResults(
 )
 
 tools = [
- # ── Outil 1 : Base de données ─────────────────────────────────────
+     # ── Outil 1 : Base de données ─────────────────────────────────────
     Tool(name='rechercher_client', func=rechercher_client,
          description='Recherche un client par nom ou ID (ex: C001). '
                      'Retourne solde, type de compte, historique achats.'),
@@ -81,7 +99,8 @@ tools = [
     Tool(
     name='calculer_portefeuille',
     func=calculer_portefeuille,
-    description='Calcule la valeur d’un portefeuille. Entrée : AAPL:10|MSFT:5')        
+    description='Calcule la valeur d’un portefeuille. Entrée : AAPL:10|MSFT:5'),
+    python_repl        
 ]
 
 
@@ -111,7 +130,7 @@ def creer_agent():
     agent_executor = AgentExecutor(
         agent=agent,
         tools=tools,
-        verbose=False,            # Affiche le raisonnement étape par étape
+        verbose=True,            # Affiche le raisonnement étape par étape
         max_iterations=10,       # Évite les boucles infinies
         handle_parsing_errors=True
     )

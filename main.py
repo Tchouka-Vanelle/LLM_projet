@@ -60,6 +60,14 @@ SCENARIOS = {
         "Scénario 10 – Actualités",
         "Donne-moi les actualités Apple aujourd'hui"
     ),
+    "11": (
+        "Scénario 11 – Calcul avancé Python",
+        "1) Récupère les prix actuels des actions AAPL, MSFT, TSLA avec les outils. "
+        "2) Utilise python_repl pour analyser ce portefeuille : AAPL:10|MSFT:5|TSLA:2. "
+        "Trie par valeur décroissante et affiche avec print(). "
+        "Donne des statistiques complètes : total, moyenne, minimum, maximum, "
+        "écart-type, variance et identifie la meilleure et la pire action."
+    ),
 }
 
 
