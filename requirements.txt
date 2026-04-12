@@ -11,3 +11,4 @@ yfinance
 tavily-python
 langchain-experimental
 streamlit
+langchain

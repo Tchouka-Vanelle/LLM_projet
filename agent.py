@@ -1,4 +1,3 @@
-# agent.py
 from langchain_classic.tools import Tool
 from tools.database      import rechercher_client, rechercher_produit
 from tools.finance       import obtenir_cours_action, obtenir_cours_crypto
@@ -7,7 +6,7 @@ from tools.calculs       import calculer_marge, calculer_mensualite_pret
 from tools.api_publique  import convertir_devise
 from tools.texte         import resumer_texte, formater_rapport, extraire_mots_cles
 from tools.recommandation import recommander_produits
-from tools.portefeuille import calculer_portefeuille
+from tools.portefeuille import calculer_portefeuille, get_positions, analyser_portefeuille
 
 from langchain_community.tools import TavilySearchResults
 import os
@@ -15,6 +14,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from langchain_experimental.tools import PythonREPLTool
+from langchain_classic.memory import ConversationBufferMemory
+from langchain_classic.agents import create_openai_tools_agent
 
 python_repl = PythonREPLTool()
 python_repl.name = "python_repl"
@@ -97,10 +98,34 @@ tools = [
     
     tavily_tool ,
     Tool(
-    name='calculer_portefeuille',
-    func=calculer_portefeuille,
-    description='Calcule la valeur d’un portefeuille. Entrée : AAPL:10|MSFT:5'),
-    python_repl        
+     name='calculer_portefeuille',
+     func=calculer_portefeuille,
+     description=(
+               "Calcule la valeur d’un portefeuille à partir d’une entrée utilisateur "
+               "ex: AAPL:10|MSFT:5. "
+               "Ne pas utiliser si les données sont en base."
+          )
+    ),
+    python_repl,
+    Tool(
+     name="get_positions",
+     func=get_positions,
+     description=(
+          "Utilise cet outil pour récupérer le portefeuille (actions et quantités) "
+          "depuis la base de données PostgreSQL. "
+          "Ce portefeuille est unique et ne dépend d’aucun client."
+          "A utiliser pour toute question sur un portefeuille d’investissement."
+     )
+    ),    
+    Tool(
+     name="analyser_portefeuille",
+     func=analyser_portefeuille,
+     description=(
+          "Analyse le portefeuille depuis la base PostgreSQL et identifie "
+          "les actifs les plus risqués. "
+          "A utiliser pour toute question sur le risque ou l’analyse du portefeuille."
+     )
+    ),    
 ]
 
 
@@ -120,16 +145,51 @@ def creer_agent():
  
     # Chargement du prompt ReAct depuis le hub LangChain
     # Ce prompt enseigne au LLM le cycle Thought → Action → Observation
-    prompt = hub.pull("hwchase17/react")
+    #prompt = hub.pull("hwchase17/react")
+    from langchain_core.prompts import ChatPromptTemplate
+
+    '''   🧠 système → règles
+          🗂️ mémoire → ce qu’on sait déjà
+          ❓ question → nouvelle demande
+          ⚙️ scratchpad → raisonnement + outils
+    '''
+    prompt = ChatPromptTemplate.from_messages([
+          ("system",
+               """Tu es un assistant financier intelligent.
+
+          Tu dois utiliser les outils disponibles pour répondre aux questions.
+
+          Règles :
+          - Utilise les outils pour obtenir les données
+          - Ne fais jamais de calculs complexes de tête
+          - Pour les calculs complexes, utilise python_repl
+          - Sois précis et structuré
+          """),
+          ("placeholder", "{chat_history}"), #mémoire AVANT la question
+          ("human", "{input}"),
+          ("placeholder", "{agent_scratchpad}"), #obligatoire pour tools
+          ])
+    
+    memory = ConversationBufferMemory(
+          memory_key="chat_history",
+          return_messages=True
+    )
     
     
     # Création de l'agent avec la stratégie ReAct
-    agent = create_react_agent(llm=llm, tools=tools, prompt=prompt)
+    #agent = create_react_agent(llm=llm, tools=tools, prompt=prompt)
+    # Création de l'agent avec la stratégie openai tools
+    agent = create_openai_tools_agent(
+     llm=llm,
+     tools=tools,
+     prompt=prompt
+    )
  
     # Création de l'exécuteur
     agent_executor = AgentExecutor(
         agent=agent,
         tools=tools,
+        memory=memory,
         verbose=True,            # Affiche le raisonnement étape par étape
         max_iterations=10,       # Évite les boucles infinies
         handle_parsing_errors=True

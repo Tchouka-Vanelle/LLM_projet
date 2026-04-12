@@ -12,6 +12,7 @@ HOW :
 - affichage conversation
 - sidebar avec tools
 """
+#streamlit run app.py
 
 import streamlit as st
 from agent import creer_agent
