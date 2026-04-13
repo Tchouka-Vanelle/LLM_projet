@@ -73,7 +73,7 @@ def calculer_portefeuille(input_str: str) -> str:
     except Exception as e:
         return f"Erreur portefeuille : {str(e)}"
 
-from database import get_connection
+from tools.database import get_connection
 
 
 def get_positions(_input: str = "") -> str:
@@ -104,7 +104,7 @@ def analyser_portefeuille(_input: str = "") -> str:
     """
 
     import yfinance as yf
-    from database import get_connection
+    from tools.database import get_connection
 
     conn = get_connection()
     cursor = conn.cursor()

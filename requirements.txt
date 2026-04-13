@@ -12,3 +12,5 @@ tavily-python
 langchain-experimental
 streamlit
 langchain
+fastapi
+uvicorn
